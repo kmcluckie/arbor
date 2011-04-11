@@ -9,12 +9,14 @@ var Node = function(data){
 	this.data = data || {};  // the user-serviceable parts
 	this._mass = (data.mass!==undefined) ? data.mass : 1
 	this._fixed = (data.fixed===true) ? true : false
+	this.visible = (data.visible===undefined) ? true : false
 	this._p = new Point((typeof(data.x)=='number') ? data.x : null, 
                      (typeof(data.y)=='number') ? data.y : null)
   delete this.data.x
   delete this.data.y
   delete this.data.mass
   delete this.data.fixed
+  delete this.data.visible
 };
 var _nextNodeId = 1
 
@@ -24,7 +26,9 @@ var Edge = function(source, target, data){
 	this.target = target;
 	this.length = (data.length!==undefined) ? data.length : 1
 	this.data = (data!==undefined) ? data : {};
+	this.visible = (data.visible===undefined) ? true : false
 	delete this.data.length
+  delete this.data.visible
 };
 var _nextEdgeId = -1
 

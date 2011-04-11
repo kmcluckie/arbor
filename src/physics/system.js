@@ -121,6 +121,62 @@
         _changes.push({t:"dropNode", id:node._id})
         that._notify();
       },
+      
+      // hides a node and its associated edges from the graph
+      hideNode:function(nodeOrName){
+        var node = that.getNode(nodeOrName)
+        node.visible = false;
+
+        $.each(state.edges, function(id, e){
+          if (e.visible && (e.source._id === node._id || e.target._id === node._id)){
+            that.hideEdge(e);
+          }
+        })
+
+        _changes.push({t:"dropNode", id:node._id})
+        that._notify();
+      },
+      
+      // shows a node and all it's edges. Returns shown node.
+      showNode:function(nodeOrName){
+        var node = that.showNodeOnly(nodeOrName);
+        var edges = that.getEdgesFrom(nodeOrName).concat(that.getEdgesTo(nodeOrName));
+        $.each(edges, function(i, edge) {
+          that.showEdge(edge);
+        });
+        
+        return node;
+      },
+      
+      // shows a node without showing any edges. showEdge may be invoked independently.
+      showNodeOnly:function(nodeOrName){
+        var node = state.names[nodeOrName]
+        node.visible = true;
+        
+        if (!node){
+          return that.addNode(nodeOrName)
+        }else{
+          _changes.push({t:"addNode", id:node._id, m:node.mass})
+          that._notify();
+          
+          return node;
+        }
+      },
+
+      // hides an edge
+      hideEdge:function(edge) {
+        _changes.push({t:"dropSpring", id:edge._id})
+        edge.visible = false;
+        that._notify();
+      },
+
+      // shows an edge
+      showEdge:function(edge) {
+        _changes.push({t:"addSpring", id:edge._id, fm:edge.source._id, to:edge.target._id, l:edge.length});
+        that._notify();
+        edge.visible = true;
+        return edge;
+      },
 
       getNode:function(nodeOrName){
         if (nodeOrName._id!==undefined){
@@ -135,6 +191,15 @@
         // callback should accept two arguments: Node, Point
         $.each(state.nodes, function(id, n){
           if (n._p.x==null || n._p.y==null) return
+          var pt = (_screenSize!==null) ? that.toScreen(n._p) : n._p
+          callback.call(that, n, pt);
+        })
+      },
+
+      eachVisibleNode:function(callback){
+        // callback should accept two arguments: Node, Point
+        $.each(state.nodes, function(id, n){
+          if (n._p.x==null || n._p.y==null || !n.visible) return
           var pt = (_screenSize!==null) ? that.toScreen(n._p) : n._p
           callback.call(that, n, pt);
         })
@@ -239,6 +304,23 @@
 
 
           if (p1.x==null || p2.x==null) return
+          
+          p1 = (_screenSize!==null) ? that.toScreen(p1) : p1
+          p2 = (_screenSize!==null) ? that.toScreen(p2) : p2
+          
+          if (p1 && p2) callback.call(that, e, p1, p2);
+        })
+      },
+
+      eachVisibleEdge:function(callback){
+        // callback should accept two arguments: Edge, Point
+        $.each(state.edges, function(id, e){
+          var p1 = state.nodes[e.source._id]._p
+          var p2 = state.nodes[e.target._id]._p
+
+
+          if (p1.x==null || p2.x==null || !e.source.visible || !e.target.visible || !e.visible)
+            return
           
           p1 = (_screenSize!==null) ? that.toScreen(p1) : p1
           p2 = (_screenSize!==null) ? that.toScreen(p2) : p2

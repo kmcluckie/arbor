@@ -95,8 +95,10 @@
           state.names[name] = node
           state.nodes[node._id] = node;
 
-          _changes.push({t:"addNode", id:node._id, m:node.mass})
-          that._notify();
+          if (node.visible) {
+            _changes.push({t:"addNode", id:node._id, m:node.mass})
+            that._notify();
+          }
           return node;
 
         }
@@ -165,6 +167,7 @@
 
       // hides an edge
       hideEdge:function(edge) {
+        if (!edge) return
         _changes.push({t:"dropSpring", id:edge._id})
         edge.visible = false;
         that._notify();
@@ -172,6 +175,7 @@
 
       // shows an edge
       showEdge:function(edge) {
+        if (!edge) return
         _changes.push({t:"addSpring", id:edge._id, fm:edge.source._id, to:edge.target._id, l:edge.length});
         that._notify();
         edge.visible = true;
@@ -226,8 +230,10 @@
           state.edges[edge._id] = edge
           state.adjacency[src][dst].push(edge)
           var len = (edge.length!==undefined) ? edge.length : 1
-          _changes.push({t:"addSpring", id:edge._id, fm:src, to:dst, l:len})
-          that._notify()
+          if (edge.visible){
+            _changes.push({t:"addSpring", id:edge._id, fm:src, to:dst, l:len})
+            that._notify()
+          }
         }
 
         return edge;

@@ -152,7 +152,7 @@
       
       // shows a node without showing any edges. showEdge may be invoked independently.
       showNodeOnly:function(nodeOrName){
-        var node = state.names[nodeOrName]
+        var node = that.getNode(nodeOrName)
         node.visible = true;
         
         if (!node){

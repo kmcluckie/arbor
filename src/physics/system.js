@@ -128,12 +128,18 @@
       hideNode:function(nodeOrName){
         var node = that.getNode(nodeOrName)
         node.visible = false;
-
+        
+        // now that we've made the node visible we'll just go through each edge and make sure that
+        // each should still be visible
         $.each(state.edges, function(id, e){
-          if (e.visible && (e.source._id === node._id || e.target._id === node._id)){
+          if (e.visible && (!e.source.visible || !e.target.visible)) {
             that.hideEdge(e);
+            
+            // now that we've hidden that edge we have to hide any nodes that are orphaned            
+            if (that.getVisibleEdgesTo(e.target).length + that.getVisibleEdgesFrom(e.target).length == 0) that.hideNode(e.target);
+            if (that.getVisibleEdgesTo(e.source).length + that.getVisibleEdgesFrom(e.source).length == 0) that.hideNode(e.source);
           }
-        })
+        });
 
         _changes.push({t:"dropNode", id:node._id})
         that._notify();
@@ -297,6 +303,36 @@
         var nodeEdges = []
         $.each(state.edges, function(edgeId, edge){
           if (edge.target == node) nodeEdges.push(edge)
+        })
+        
+        return nodeEdges;
+      },
+
+      getVisibleEdgesFrom:function(node) {
+        node = that.getNode(node)
+        if (!node) return []
+        
+        if (typeof(state.adjacency[node._id]) !== 'undefined'){
+          var nodeEdges = []
+          $.each(state.adjacency[node._id], function(id, subEdges){
+            $.each(subEdges, function(index, edge) {
+              if (edge.visible) nodeEdges.push(edge)
+            });
+            //nodeEdges = nodeEdges.concat(subEdges)
+          })
+          return nodeEdges
+        }
+
+        return [];
+      },
+
+      getVisibleEdgesTo:function(node) {
+        node = that.getNode(node)
+        if (!node) return []
+
+        var nodeEdges = []
+        $.each(state.edges, function(edgeId, edge){
+          if (edge.target == node && edge.visible) nodeEdges.push(edge)
         })
         
         return nodeEdges;
